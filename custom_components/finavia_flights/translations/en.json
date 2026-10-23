@@ -1,0 +1,76 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Finavia Flights",
+        "description": "Departures from Finavia's airports. The API key is free. Sign up on Finavia's API portal ({portal_url}) and subscribe to Public Flights. Once this is set up, add airports from the integration page.",
+        "data": {
+          "api_key": "Finavia API key"
+        },
+        "data_description": {
+          "api_key": "The key from the portal's Profile page. It's checked when you save it."
+        }
+      },
+      "reconfigure": {
+        "title": "Finavia API key",
+        "description": "A new key from Finavia's API portal ({portal_url}).",
+        "data": {
+          "api_key": "Finavia API key"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Finavia API key",
+        "description": "Finavia didn't accept the API key. Enter a key from Finavia's API portal ({portal_url}).",
+        "data": {
+          "api_key": "Finavia API key"
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "Finavia didn't accept this API key.",
+      "cannot_connect": "Finavia couldn't be reached. Try again in a moment."
+    },
+    "abort": {
+      "single_instance_allowed": "Finavia Flights is already set up. Add more airports from the integration page.",
+      "reconfigure_successful": "API key saved.",
+      "reauth_successful": "API key saved."
+    }
+  },
+  "config_subentries": {
+    "airport": {
+      "entry_type": "Airport",
+      "initiate_flow": {
+        "user": "Add airport",
+        "reconfigure": "Change airport"
+      },
+      "step": {
+        "user": {
+          "title": "Airport",
+          "description": "Departures from one of Finavia's airports, fetched every 10 minutes.",
+          "data": {
+            "airport": "Airport",
+            "departures": "Number of departures"
+          },
+          "data_description": {
+            "departures": "How many of the next departures the sensor lists."
+          }
+        },
+        "reconfigure": {
+          "title": "Airport",
+          "description": "Departures from {airport}.",
+          "data": {
+            "departures": "Number of departures"
+          },
+          "data_description": {
+            "departures": "How many of the next departures the sensor lists."
+          }
+        }
+      },
+      "abort": {
+        "already_configured": "This airport has already been added.",
+        "all_added": "Every airport has already been added.",
+        "reconfigure_successful": "Airport saved."
+      }
+    }
+  }
+}

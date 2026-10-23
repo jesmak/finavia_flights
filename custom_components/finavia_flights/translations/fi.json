@@ -1,0 +1,76 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Finavia Flights",
+        "description": "Lähtevät lennot Finavian lentoasemilta. API-avain on ilmainen. Rekisteröidy Finavian API-portaaliin ({portal_url}) ja tilaa Public Flights. Lisää sen jälkeen lentoasemat integraation sivulta.",
+        "data": {
+          "api_key": "Finavian API-avain"
+        },
+        "data_description": {
+          "api_key": "Avain portaalin Profile-sivulta. Se tarkistetaan tallennettaessa."
+        }
+      },
+      "reconfigure": {
+        "title": "Finavian API-avain",
+        "description": "Uusi avain Finavian API-portaalista ({portal_url}).",
+        "data": {
+          "api_key": "Finavian API-avain"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Finavian API-avain",
+        "description": "Finavia ei hyväksynyt API-avainta. Anna avain Finavian API-portaalista ({portal_url}).",
+        "data": {
+          "api_key": "Finavian API-avain"
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "Finavia ei hyväksynyt tätä API-avainta.",
+      "cannot_connect": "Finaviaan ei saatu yhteyttä. Yritä hetken päästä uudelleen."
+    },
+    "abort": {
+      "single_instance_allowed": "Finavia Flights on jo käytössä. Lisää lentoasemia integraation sivulta.",
+      "reconfigure_successful": "API-avain tallennettu.",
+      "reauth_successful": "API-avain tallennettu."
+    }
+  },
+  "config_subentries": {
+    "airport": {
+      "entry_type": "Lentoasema",
+      "initiate_flow": {
+        "user": "Lisää lentoasema",
+        "reconfigure": "Muuta lentoasemaa"
+      },
+      "step": {
+        "user": {
+          "title": "Lentoasema",
+          "description": "Lähtevät lennot yhdeltä Finavian lentoasemalta. Ne haetaan 10 minuutin välein.",
+          "data": {
+            "airport": "Lentoasema",
+            "departures": "Lähtöjen määrä"
+          },
+          "data_description": {
+            "departures": "Kuinka monta seuraavaa lähtöä anturi listaa."
+          }
+        },
+        "reconfigure": {
+          "title": "Lentoasema",
+          "description": "Lähdöt lentoasemalta {airport}.",
+          "data": {
+            "departures": "Lähtöjen määrä"
+          },
+          "data_description": {
+            "departures": "Kuinka monta seuraavaa lähtöä anturi listaa."
+          }
+        }
+      },
+      "abort": {
+        "already_configured": "Tämä lentoasema on jo lisätty.",
+        "all_added": "Kaikki lentoasemat on jo lisätty.",
+        "reconfigure_successful": "Lentoasema tallennettu."
+      }
+    }
+  }
+}

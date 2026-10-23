@@ -1,0 +1,14 @@
+{
+  "domain": "finavia_flights",
+  "name": "Finavia Flights",
+  "codeowners": ["@jesmak"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/jesmak/finavia_flights",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/jesmak/finavia_flights/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "1.0.0"
+}

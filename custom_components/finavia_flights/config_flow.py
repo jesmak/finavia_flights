@@ -1,0 +1,148 @@
+"""Config flow.
+
+The config entry holds the user's Finavia API key. Airports are config subentries, added and changed from the
+integration page, so a second airport doesn't ask for the key again.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
+
+import voluptuous as vol
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, ConfigSubentryFlow, SubentryFlowResult
+from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
+
+from .api import FinaviaAuthError, FinaviaClient, FinaviaError
+from .const import (
+    AIRPORTS,
+    CONF_AIRPORT,
+    CONF_DEPARTURES,
+    DEFAULT_DEPARTURES,
+    DOMAIN,
+    KEY_CHECK_AIRPORT,
+    MAX_DEPARTURES,
+    PORTAL_URL,
+    SUBENTRY_AIRPORT,
+    airport_name,
+    language_of,
+)
+
+KEY_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))})
+PLACEHOLDERS = {"portal_url": PORTAL_URL}
+
+
+async def check_api_key(hass: HomeAssistant, api_key: str) -> dict[str, str]:
+    """Checks a key with Finavia by fetching a small airport's departures."""
+    try:
+        await FinaviaClient(async_get_clientsession(hass), api_key).departures_xml(KEY_CHECK_AIRPORT)
+    except FinaviaAuthError:
+        return {CONF_API_KEY: "invalid_api_key"}
+    except FinaviaError:
+        return {"base": "cannot_connect"}
+    return {}
+
+
+class FinaviaFlightsConfigFlow(ConfigFlow, domain=DOMAIN):
+    VERSION = 1
+
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            api_key = str(user_input[CONF_API_KEY]).strip()
+            errors = await check_api_key(self.hass, api_key)
+            if not errors:
+                return self.async_create_entry(title="Finavia", data={CONF_API_KEY: api_key})
+        return self.async_show_form(step_id="user", data_schema=KEY_SCHEMA, errors=errors, description_placeholders=PLACEHOLDERS)
+
+    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        return await self._step_new_key("reconfigure", self._get_reconfigure_entry(), "reconfigure_successful", user_input)
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Asks for a new key when Finavia refuses the old one."""
+        return await self._step_new_key("reauth_confirm", self._get_reauth_entry(), "reauth_successful", user_input)
+
+    async def _step_new_key(self, step_id: str, entry: ConfigEntry, reason: str, user_input: dict[str, Any] | None) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            api_key = str(user_input[CONF_API_KEY]).strip()
+            errors = await check_api_key(self.hass, api_key)
+            if not errors:
+                # The update listener in __init__.py reloads the entry.
+                self.hass.config_entries.async_update_entry(entry, data={**entry.data, CONF_API_KEY: api_key})
+                return self.async_abort(reason=reason)
+        return self.async_show_form(step_id=step_id, data_schema=KEY_SCHEMA, errors=errors, description_placeholders=PLACEHOLDERS)
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(cls, config_entry: ConfigEntry) -> dict[str, type[ConfigSubentryFlow]]:
+        return {SUBENTRY_AIRPORT: AirportFlow}
+
+
+def departures_field() -> dict[vol.Marker, Any]:
+    return {
+        vol.Required(CONF_DEPARTURES, default=DEFAULT_DEPARTURES): NumberSelector(
+            NumberSelectorConfig(min=1, max=MAX_DEPARTURES, step=1, mode=NumberSelectorMode.BOX)
+        )
+    }
+
+
+class AirportFlow(ConfigSubentryFlow):
+    """Adding an airport (step "user") and changing how many departures it lists (step "reconfigure")."""
+
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        language = language_of(self.hass.config.language)
+        added = {subentry.data.get(CONF_AIRPORT) for subentry in self._get_entry().subentries.values()}
+        if user_input is not None:
+            airport = str(user_input[CONF_AIRPORT])
+            if airport in added:
+                return self.async_abort(reason="already_configured")
+            return self.async_create_entry(
+                title=airport_name(airport, language),
+                data={CONF_AIRPORT: airport, CONF_DEPARTURES: int(user_input[CONF_DEPARTURES])},
+            )
+
+        options = sorted(
+            (SelectOptionDict(value=code, label=f"{airport_name(code, language)} ({code})") for code in AIRPORTS if code not in added),
+            key=lambda option: option["label"],
+        )
+        if not options:
+            return self.async_abort(reason="all_added")
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_AIRPORT): SelectSelector(
+                    SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN, sort=False)
+                ),
+                **departures_field(),
+            }
+        )
+        return self.async_show_form(step_id="user", data_schema=schema)
+
+    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        subentry = self._get_reconfigure_subentry()
+        if user_input is not None:
+            return self.async_update_and_abort(
+                self._get_entry(), subentry, data={**subentry.data, CONF_DEPARTURES: int(user_input[CONF_DEPARTURES])}
+            )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(vol.Schema(departures_field()), subentry.data),
+            description_placeholders={"airport": subentry.title},
+        )
