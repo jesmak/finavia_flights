@@ -4,6 +4,9 @@ Home Assistant integration that turns the departures and arrivals at Finavia's a
 
 [![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![HACS][hacs-shield]][hacs] [![License][license-shield]](LICENSE)
 
+<img src="https://raw.githubusercontent.com/jesmak/finavia_flights/main/docs/images/dashboard-light.png#gh-light-mode-only" width="1032" alt="An airport's departures and arrivals side by side on two departure boards, the next flight of each large with its countdown, a cancelled departure, two landed arrivals dimmed with their baggage halls, and one approaching">
+<img src="https://raw.githubusercontent.com/jesmak/finavia_flights/main/docs/images/dashboard-dark.png#gh-dark-mode-only" width="1032" alt="An airport's departures and arrivals side by side on two departure boards, the next flight of each large with its countdown, a cancelled departure, two landed arrivals dimmed with their baggage halls, and one approaching">
+
 ## What is it?
 
 A custom component that lists the next flights leaving and landing at any of Finavia's airports in Finland, from
@@ -134,6 +137,9 @@ entities:
 ### Departures and arrivals in one list
 
 Each flight then shows whether it is leaving or landing.
+
+<img src="https://raw.githubusercontent.com/jesmak/finavia_flights/main/docs/images/one-list-light.png#gh-light-mode-only" width="510" alt="An airport's departures and arrivals as one list by time, each flight with a takeoff or landing icon, the next departure large, landed arrivals dimmed and a cancelled departure with an outlined badge">
+<img src="https://raw.githubusercontent.com/jesmak/finavia_flights/main/docs/images/one-list-dark.png#gh-dark-mode-only" width="510" alt="An airport's departures and arrivals as one list by time, each flight with a takeoff or landing icon, the next departure large, landed arrivals dimmed and a cancelled departure with an outlined badge">
 
 ```yaml
 type: custom:departures-card
