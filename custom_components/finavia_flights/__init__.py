@@ -1,7 +1,7 @@
-"""Finavia Flights: departures from Finavia's airports as departure sensors.
+"""Finavia Flights: departures and arrivals at Finavia's airports as departures sensors.
 
-The config entry holds the API key, and every airport is a config subentry with its own coordinator and sensor in the
-departures format that departures-card shows.
+The config entry holds the API key, and every airport is a config subentry with its own coordinator, and a sensor for
+each of its directions, in the departures format that departures-card shows.
 """
 
 from __future__ import annotations

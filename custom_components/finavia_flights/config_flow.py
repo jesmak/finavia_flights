@@ -32,7 +32,12 @@ from .const import (
     AIRPORTS,
     CONF_AIRPORT,
     CONF_DEPARTURES,
+    CONF_DIRECTION,
     DEFAULT_DEPARTURES,
+    DIRECTION_BOTH,
+    DIRECTION_DEPARTURES,
+    DIRECTION_SENSORS,
+    DIRECTIONS,
     DOMAIN,
     KEY_CHECK_AIRPORT,
     MAX_DEPARTURES,
@@ -49,7 +54,7 @@ PLACEHOLDERS = {"portal_url": PORTAL_URL}
 async def check_api_key(hass: HomeAssistant, api_key: str) -> dict[str, str]:
     """Checks a key with Finavia by fetching a small airport's departures."""
     try:
-        await FinaviaClient(async_get_clientsession(hass), api_key).departures_xml(KEY_CHECK_AIRPORT)
+        await FinaviaClient(async_get_clientsession(hass), api_key).flights_xml("dep", KEY_CHECK_AIRPORT)
     except FinaviaAuthError:
         return {CONF_API_KEY: "invalid_api_key"}
     except FinaviaError:
@@ -105,22 +110,41 @@ def departures_field() -> dict[vol.Marker, Any]:
 
 
 class AirportFlow(ConfigSubentryFlow):
-    """Adding an airport (step "user") and changing how many departures it lists (step "reconfigure")."""
+    """Adding an airport's departures, arrivals or both (step "user"), and changing how many it lists (step "reconfigure").
+
+    Each of an airport's directions can be added once.
+    """
+
+    def _added(self) -> dict[str, set[str]]:
+        """The directions each airport has already, from the subentries as they are now."""
+        added: dict[str, set[str]] = {}
+        for subentry in self._get_entry().subentries.values():
+            direction = str(subentry.data.get(CONF_DIRECTION, DIRECTION_DEPARTURES))
+            added.setdefault(str(subentry.data.get(CONF_AIRPORT)), set()).update(DIRECTION_SENSORS[direction])
+        return added
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
         language = language_of(self.hass.config.language)
-        added = {subentry.data.get(CONF_AIRPORT) for subentry in self._get_entry().subentries.values()}
+        errors: dict[str, str] = {}
+        # Read again when the form is sent, as another window may have added the airport meanwhile.
+        added = self._added()
         if user_input is not None:
-            airport = str(user_input[CONF_AIRPORT])
-            if airport in added:
-                return self.async_abort(reason="already_configured")
-            return self.async_create_entry(
-                title=airport_name(airport, language),
-                data={CONF_AIRPORT: airport, CONF_DEPARTURES: int(user_input[CONF_DEPARTURES])},
-            )
+            airport, direction = str(user_input[CONF_AIRPORT]), str(user_input[CONF_DIRECTION])
+            if added.get(airport, set()) & set(DIRECTION_SENSORS[direction]):
+                errors[CONF_DIRECTION] = "direction_added"
+            else:
+                return self.async_create_entry(
+                    title=airport_name(airport, language),
+                    data={CONF_AIRPORT: airport, CONF_DIRECTION: direction, CONF_DEPARTURES: int(user_input[CONF_DEPARTURES])},
+                )
 
+        both = set(DIRECTION_SENSORS[DIRECTION_BOTH])
         options = sorted(
-            (SelectOptionDict(value=code, label=f"{airport_name(code, language)} ({code})") for code in AIRPORTS if code not in added),
+            (
+                SelectOptionDict(value=code, label=f"{airport_name(code, language)} ({code})")
+                for code in AIRPORTS
+                if not both <= added.get(code, set())
+            ),
             key=lambda option: option["label"],
         )
         if not options:
@@ -130,10 +154,15 @@ class AirportFlow(ConfigSubentryFlow):
                 vol.Required(CONF_AIRPORT): SelectSelector(
                     SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN, sort=False)
                 ),
+                vol.Required(CONF_DIRECTION, default=DIRECTION_BOTH): SelectSelector(
+                    SelectSelectorConfig(options=DIRECTIONS, translation_key=CONF_DIRECTION, mode=SelectSelectorMode.LIST)
+                ),
                 **departures_field(),
             }
         )
-        return self.async_show_form(step_id="user", data_schema=schema)
+        return self.async_show_form(
+            step_id="user", data_schema=self.add_suggested_values_to_schema(schema, user_input or {}), errors=errors
+        )
 
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
         subentry = self._get_reconfigure_subentry()

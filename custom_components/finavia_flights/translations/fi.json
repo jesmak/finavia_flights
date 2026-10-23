@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Finavia Flights",
-        "description": "Lähtevät lennot Finavian lentoasemilta. API-avain on ilmainen. Rekisteröidy Finavian API-portaaliin ({portal_url}) ja tilaa Public Flights. Lisää sen jälkeen lentoasemat integraation sivulta.",
+        "description": "Lennot Finavian lentoasemilta. API-avain on ilmainen. Rekisteröidy Finavian API-portaaliin ({portal_url}) ja tilaa Public Flights. Lisää sen jälkeen lentoasemat integraation sivulta.",
         "data": {
           "api_key": "Finavian API-avain"
         },
@@ -46,30 +46,50 @@
       "step": {
         "user": {
           "title": "Lentoasema",
-          "description": "Lähtevät lennot yhdeltä Finavian lentoasemalta. Ne haetaan 10 minuutin välein.",
+          "description": "Lennot yhdellä Finavian lentoasemalla. Ne haetaan 10 minuutin välein.",
           "data": {
             "airport": "Lentoasema",
-            "departures": "Lähtöjen määrä"
+            "direction": "Lennot",
+            "departures": "Lentojen määrä"
           },
           "data_description": {
-            "departures": "Kuinka monta seuraavaa lähtöä anturi listaa."
+            "direction": "Molemmat luo kaksi anturia, toisen lähtevistä ja toisen saapuvista lennoista.",
+            "departures": "Kuinka monta seuraavaa lentoa kukin anturi listaa."
           }
         },
         "reconfigure": {
           "title": "Lentoasema",
-          "description": "Lähdöt lentoasemalta {airport}.",
+          "description": "Lennot lentoasemalla {airport}.",
           "data": {
-            "departures": "Lähtöjen määrä"
+            "departures": "Lentojen määrä"
           },
           "data_description": {
-            "departures": "Kuinka monta seuraavaa lähtöä anturi listaa."
+            "departures": "Kuinka monta seuraavaa lentoa kukin anturi listaa."
           }
         }
       },
       "abort": {
-        "already_configured": "Tämä lentoasema on jo lisätty.",
         "all_added": "Kaikki lentoasemat on jo lisätty.",
         "reconfigure_successful": "Lentoasema tallennettu."
+      },
+      "error": {
+        "direction_added": "Toinen näistä suunnista on jo lisätty tälle lentoasemalle. Valitse toinen tai poista ensin vanha lentoasema."
+      }
+    }
+  },
+  "selector": {
+    "direction": {
+      "options": {
+        "departures": "Lähtevät",
+        "arrivals": "Saapuvat",
+        "both": "Molemmat"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "arrivals": {
+        "name": "saapuvat"
       }
     }
   }

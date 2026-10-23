@@ -1,17 +1,20 @@
 # Finavia Flights for Home Assistant
 
-Home Assistant integration that turns the departures from Finavia's airports into departure board sensors.
+Home Assistant integration that turns the departures and arrivals at Finavia's airports into departure board sensors.
 
 [![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![HACS][hacs-shield]][hacs] [![License][license-shield]](LICENSE)
 
 ## What is it?
 
-A custom component that lists the next flights leaving any of Finavia's airports in Finland, from Helsinki-Vantaa to
-Ivalo. Each airport is one sensor, with each flight's number, destination, scheduled and estimated time, gate and status.
-It's for seeing what is leaving, a departure board on your dashboard, not for keeping track of a flight of your own.
+A custom component that lists the next flights leaving and landing at any of Finavia's airports in Finland, from
+Helsinki-Vantaa to Ivalo. An airport's departures are one sensor and its arrivals another, with each flight's number,
+destination or origin, scheduled and estimated time, gate or baggage hall, and status. It's for seeing what is leaving
+and what is coming in, a departure board on your dashboard, not for keeping track of a flight of your own.
 
-Show the departures with [departures-card](https://github.com/jesmak/departures-card), which draws them as a
-departure board, the next flight large with a countdown and the ones after it below. The sensors follow the
+Show the flights with [departures-card](https://github.com/jesmak/departures-card), which draws them as a departure
+board, the next flight large with a countdown and the ones after it below, and can show an airport's departures and
+arrivals side by side or as one list. Arrivals need departures-card 1.2.0 or newer, as an older card shows them as
+departures. The sensors follow the
 [departures format](https://github.com/jesmak/departures-card/blob/main/docs/departures-format.md), the same as the
 stops of [Digitransit Live](https://github.com/jesmak/digitransit_live) and the stations of
 [Digitraffic Live](https://github.com/jesmak/digitraffic_live), so one card can show an airport next to a bus stop.
@@ -54,59 +57,69 @@ it, Home Assistant asks for a new one there.
 
 ### Airport
 
-Add with **Add airport** on the integration page. Every airport creates one sensor named after it, in Finnish when Home
-Assistant is in Finnish and in English otherwise, such as `sensor.helsinki_vantaa`. Each airport can be added once.
+Add with **Add airport** on the integration page. An airport's departures are a sensor named after it, and its arrivals
+one with "arrivals" after the name, in Finnish when Home Assistant is in Finnish and in English otherwise:
+`sensor.helsinki` and `sensor.helsinki_arrivals` in English, `sensor.helsinki_vantaa` and
+`sensor.helsinki_vantaa_saapuvat` in Finnish. Each of an airport's directions can be added once.
 
-| Name                 | Type   | Description                                 | Default |
-| -------------------- | ------ | ------------------------------------------- | ------- |
-| Airport              | choice | One of Finavia's 19 airports                | none    |
-| Number of departures | number | How many departures the sensor lists, 1–30  | 10      |
+| Name              | Type   | Description                                                                   | Default |
+| ----------------- | ------ | ----------------------------------------------------------------------------- | ------- |
+| Airport           | choice | One of Finavia's 19 airports                                                  | none    |
+| Flights           | choice | Departures, arrivals or both, which makes the two sensors from one request    | both    |
+| Number of flights | number | How many flights each sensor lists, 1–30, two landed ones at most among them  | 10      |
 
-Changing an airport changes only the number of departures. To follow another airport, add it and remove the old one.
+Changing an airport changes only the number of flights. To follow another airport or direction, remove the old one
+first, then add it.
 
 ## Sensors
 
-The state is the time of the next departure that isn't cancelled, Finavia's estimate when it has one and otherwise the
-scheduled time. The attributes follow the
-[departures format](https://github.com/jesmak/departures-card/blob/main/docs/departures-format.md):
+A departures sensor's state is the time of the next departure that isn't cancelled, an arrivals sensor's the next
+arrival that isn't cancelled and hasn't landed. Both are Finavia's estimate when it has one and otherwise the
+scheduled time.
+The attributes follow the [departures format](https://github.com/jesmak/departures-card/blob/main/docs/departures-format.md):
 
-| Attribute            | Description                             |
-| -------------------- | --------------------------------------- |
-| `departures_version` | Version of the departures format, `1`   |
-| `stop_id`            | The airport's IATA code, e.g. `HEL`     |
-| `stop_name`          | The airport's name                      |
-| `departures`         | The next departures, soonest first      |
-| `attribution`        | Data credit                             |
+| Attribute            | Description                                   |
+| -------------------- | --------------------------------------------- |
+| `departures_version` | Version of the departures format, `1`         |
+| `direction`          | `departures` or `arrivals`                    |
+| `stop_id`            | The airport's IATA code, e.g. `HEL`           |
+| `stop_name`          | The airport's name                            |
+| `departures`         | The next departures or arrivals, soonest first |
+| `attribution`        | Data credit                                   |
 
-Each departure has:
+Each flight has:
 
-| Key         | Description                                                                 |
-| ----------- | --------------------------------------------------------------------------- |
-| `id`        | The scheduled date and flight number, the same on every update              |
-| `line`      | Flight number, e.g. `AY9001`                                                |
-| `mode`      | Always `plane`                                                              |
-| `headsign`  | Destination, with any stops on the way before it, such as `Kittilä, Ivalo`  |
-| `scheduled` | Scheduled departure time                                                    |
-| `estimated` | Finavia's estimate, or the scheduled time when there is none                |
-| `realtime`  | Whether `estimated` is Finavia's estimate                                   |
-| `delay`     | Seconds late, negative when early, when there is an estimate               |
-| `platform`  | Gate, once one has been given                                               |
-| `cancelled` | `true` when the flight is cancelled                                         |
-| `notice`    | The flight's status, such as Go to gate, Final call or Gate closed          |
+| Key         | Description                                                                                      |
+| ----------- | ------------------------------------------------------------------------------------------------ |
+| `id`        | The scheduled date and flight number, the same on every update                                   |
+| `line`      | Flight number, e.g. `AY9001`                                                                     |
+| `mode`      | Always `plane`                                                                                   |
+| `headsign`  | A departure's destination, or an arrival's origin, with any stops on the way, such as `Kittilä, Ivalo` |
+| `scheduled` | Scheduled time of departure or arrival                                                           |
+| `estimated` | Finavia's time when it has one, a landed flight's landing time first, otherwise the scheduled time |
+| `realtime`  | Whether `estimated` comes from Finavia rather than the timetable                                 |
+| `delay`     | Seconds late, negative when early, when `estimated` comes from Finavia                           |
+| `platform`  | A departure's gate once one has been given, or an arrival's baggage hall at Helsinki-Vantaa      |
+| `cancelled` | `true` when the flight is cancelled                                                              |
+| `arrived`   | `true` when the flight has landed                                                                |
+| `notice`    | The flight's status, such as Go to gate, Final call, Gate closed or Approaching                  |
 
-Destinations are in Finnish when Home Assistant is in Finnish and Finavia has a Finnish name, otherwise in English.
-Statuses are in Finnish, Swedish or English, following Home Assistant's language, and in English when Finavia has no
-text in that language. A cancelled flight has no notice,
-because the card says it's cancelled, and neither has a delayed flight whose status only says its time is estimated,
-since the card shows the new time and the delay. Keys with no value are left out.
+Destinations and origins are in Finnish when Home Assistant is in Finnish and Finavia has a Finnish name, otherwise in
+English. Statuses are in Finnish, Swedish or English, following Home Assistant's language, and in English when Finavia
+has no text in that language. A cancelled or landed flight has no notice, because the card says so itself, and neither
+has a delayed flight whose status only says its time is estimated, since the card shows the new time and the delay.
+Keys with no value are left out.
 
-Flights that have left are not listed. Cancelled flights stay in the list until their time has passed. Finavia keeps
-them in its data for a day and a half, and a flight more than a minute past its time is left out, as departures-card
-would hide it anyway. Only the next departure time is stored in the recorder, not the list.
+Departures that have left are not listed. A departure more than a minute past its time is left out, as departures-card
+would hide it anyway, cancelled ones included, as Finavia keeps them in its data for a day and a half. An arrival stays
+until half an hour past its time, for a landed flight its landing time when Finavia gives one, long enough to meet
+someone at the hall. Only the latest two landed flights are listed, so a busy half hour doesn't push what's coming off
+the list. Only the next flight's time is stored in the recorder, not the list.
 
-Departures are fetched every 10 minutes. Finavia's data covers the whole day and a half every time, about 400 KB for
-Helsinki-Vantaa, so fetching more often would mostly move the same data again. If a fetch fails the sensor becomes
-unavailable until the next one works.
+Flights are fetched every 10 minutes, both directions of an airport in one request. Finavia's data covers the whole
+day and a half every time, about 400 KB for Helsinki-Vantaa's departures and as much again for its arrivals, so
+fetching more often would mostly move the same data again. If a fetch fails the sensors become unavailable until the
+next one works.
 
 ## Examples
 
@@ -115,7 +128,19 @@ unavailable until the next one works.
 ```yaml
 type: custom:departures-card
 entities:
-  - sensor.helsinki_vantaa
+  - sensor.helsinki
+```
+
+### Departures and arrivals in one list
+
+Each flight then shows whether it is leaving or landing.
+
+```yaml
+type: custom:departures-card
+combine: true
+entities:
+  - sensor.helsinki
+  - sensor.helsinki_arrivals
 ```
 
 ### An airport beside a bus stop
@@ -140,14 +165,16 @@ to show where the data comes from.
 
 ### How it is fetched
 
-One request per airport every 10 minutes, to `apigw.finavia.fi/flights/public/v0/flights/dep/<airport>` with the key in
-an `app_key` header. The answer is XML with every departure from the previous evening to the next morning. Checking a
+One request per airport every 10 minutes, to `apigw.finavia.fi/flights/public/v0/flights/<kind>/<airport>` with the
+key in an `app_key` header, `dep` for departures, `arr` for arrivals and `all` for both. The answer is XML with every
+flight from the previous evening to the next morning. Checking a
 key fetches the departures of Enontekiö, one of the smallest airports.
 
 Finavia's status codes differ between airports, so statuses are read by their English text instead. Helsinki-Vantaa
-calls a departed flight `DEP` and a cancelled one `CNL`, where the others say `D` and `C`. A flight counts as departed
-when its status says so or it has an actual departure time, since a small airport's status can stay empty after
-take-off.
+calls a departed flight `DEP` and a cancelled one `CNL`, where the others say `D` and `C`, and an estimate is `DLU`
+leaving and `EST` landing. A flight counts as departed or landed when its status says so or it has an actual time,
+since a small airport's status can stay empty. An arrival's route can list its whole way, the airport itself included,
+and then only the places before the airport are its origin.
 
 ## Translating
 
@@ -172,7 +199,7 @@ python3.14 -m venv .venv
 | `config_flow.py`               | The API key, adding an airport and changing it          |
 | `api.py`                       | The Public Flights API client                           |
 | `flights.py`                   | Finavia's XML → departures in the departures format     |
-| `coordinator.py`               | Fetching an airport's departures every 10 minutes       |
+| `coordinator.py`               | Fetching an airport's flights every 10 minutes          |
 | `sensor.py`                    | The departures sensors                                  |
 | `const.py`                     | Finavia's airports and the settings                     |
 | `translations/<language>.json` | Home Assistant UI texts                                 |

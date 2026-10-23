@@ -1,4 +1,4 @@
-"""Finavia's Public Flights API: an airport's departures as XML.
+"""Finavia's Public Flights API: an airport's departures and arrivals as XML.
 
 Every request needs a key of the user's own, free from Finavia's API portal. The gateway is Azure API Management,
 which answers a missing or wrong key with 401.
@@ -26,10 +26,11 @@ class FinaviaClient:
         self._session = session
         self._api_key = api_key
 
-    async def departures_xml(self, airport: str) -> bytes:
+    async def flights_xml(self, kind: str, airport: str) -> bytes:
+        """An airport's departures (dep), arrivals (arr) or both (all)."""
         try:
             async with self._session.get(
-                API_URL.format(airport=airport), headers={API_KEY_HEADER: self._api_key}, timeout=TIMEOUT
+                API_URL.format(kind=kind, airport=airport), headers={API_KEY_HEADER: self._api_key}, timeout=TIMEOUT
             ) as response:
                 if response.status == 401:
                     raise FinaviaAuthError("Finavia refused the API key")

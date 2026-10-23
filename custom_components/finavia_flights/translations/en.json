@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Finavia Flights",
-        "description": "Departures from Finavia's airports. The API key is free. Sign up on Finavia's API portal ({portal_url}) and subscribe to Public Flights. Once this is set up, add airports from the integration page.",
+        "description": "Flights at Finavia's airports. The API key is free. Sign up on Finavia's API portal ({portal_url}) and subscribe to Public Flights. Once this is set up, add airports from the integration page.",
         "data": {
           "api_key": "Finavia API key"
         },
@@ -46,30 +46,50 @@
       "step": {
         "user": {
           "title": "Airport",
-          "description": "Departures from one of Finavia's airports, fetched every 10 minutes.",
+          "description": "Flights at one of Finavia's airports, fetched every 10 minutes.",
           "data": {
             "airport": "Airport",
-            "departures": "Number of departures"
+            "direction": "Flights",
+            "departures": "Number of flights"
           },
           "data_description": {
-            "departures": "How many of the next departures the sensor lists."
+            "direction": "Both creates two sensors, one for departures and one for arrivals.",
+            "departures": "How many of the next flights each sensor lists."
           }
         },
         "reconfigure": {
           "title": "Airport",
-          "description": "Departures from {airport}.",
+          "description": "Flights at {airport}.",
           "data": {
-            "departures": "Number of departures"
+            "departures": "Number of flights"
           },
           "data_description": {
-            "departures": "How many of the next departures the sensor lists."
+            "departures": "How many of the next flights each sensor lists."
           }
         }
       },
       "abort": {
-        "already_configured": "This airport has already been added.",
         "all_added": "Every airport has already been added.",
         "reconfigure_successful": "Airport saved."
+      },
+      "error": {
+        "direction_added": "One of these directions has already been added for this airport. Choose the other one, or remove the old airport first."
+      }
+    }
+  },
+  "selector": {
+    "direction": {
+      "options": {
+        "departures": "Departures",
+        "arrivals": "Arrivals",
+        "both": "Both"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "arrivals": {
+        "name": "arrivals"
       }
     }
   }
