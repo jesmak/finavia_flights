@@ -127,9 +127,9 @@ def expect(**changes: object) -> dict:
             expect(scheduled="2026-03-14T10:20:00+00:00", estimated="2026-03-14T09:59:00+00:00", realtime=True, delay=-1260),
         ),
         (
-            "cancelled, with an actual time",
+            "cancelled, with an actual time all the same, hasn't left",
             flight("AY1", LATER, OULU, status="Cancelled", code="CNL", actual="2026-03-14T09:58:00Z"),
-            None,
+            expect(cancelled=True),
         ),
         ("estimated on time", flight("AY1", LATER, OULU, estimate=LATER), expect(realtime=True, delay=0)),
         (
@@ -399,15 +399,106 @@ def test_a_flight_through_the_airport_has_two_ids() -> None:
     assert leaving.id != landing.id
 
 
-def test_only_the_latest_two_landed_are_listed_in_the_count() -> None:
+# The count is of the arrivals still to come. The latest two landed are listed besides them, and don't take its places.
+@pytest.mark.parametrize(
+    ("count", "landed", "expected"),
+    [
+        (1, 1, ["AY1", "AY5"]),
+        (1, 3, ["AY2", "AY3", "AY5"]),
+        (2, 2, ["AY1", "AY2", "AY5", "AY6"]),
+        (3, 0, ["AY5", "AY6", "AY7"]),
+        (5, 3, ["AY2", "AY3", "AY5", "AY6", "AY7"]),
+    ],
+)
+def test_the_count_is_of_the_arrivals_still_to_come(count: int, landed: int, expected: list[str]) -> None:
+    times = ("35", "40", "45")[:landed]
+    flights = [
+        flight(f"AY{n}", f"2026-03-14T09:{m}:00Z", OULU, status="Landed", code="LAN", actual=f"2026-03-14T09:{m}:00Z")
+        for n, m in enumerate(times, 1)
+    ]
+    flights += [flight(f"AY{n}", f"2026-03-14T10:{m}:00Z", OULU) for n, m in ((5, 10), (6, 20), (7, 30))]
+    assert [found.line for found in arrivals(parse_board(arrivals_xml(*flights)), "fi", count, NOW)] == expected
+
+
+def test_only_the_latest_two_over_are_listed_and_a_cancelled_one_never_lands() -> None:
     landed = [
         flight(f"AY{n}", f"2026-03-14T09:{m}:00Z", OULU, status="Landed", code="LAN", actual=f"2026-03-14T09:{m}:00Z")
         for n, m in ((1, 35), (2, 40), (3, 45), (4, 50))
     ]
     coming = [flight(f"AY{n}", f"2026-03-14T10:{m}:00Z", OULU) for n, m in ((5, 10), (6, 20), (7, 30))]
-    cancelled = flight("AY8", "2026-03-14T09:55:00Z", OULU, status="Cancelled", code="CNL")
-    found = arrivals(parse_board(arrivals_xml(*landed, cancelled, *coming)), "fi", 5, NOW)
-    assert [f.line for f in found] == ["AY3", "AY4", "AY8", "AY5", "AY6"], "a cancelled one isn't a landed one"
+    # A cancelled flight with a landing time all the same still hasn't landed.
+    cancelled = flight("AY8", "2026-03-14T09:55:00Z", OULU, status="Cancelled", code="CNL", actual="2026-03-14T09:55:00Z")
+    found = arrivals(parse_board(arrivals_xml(*landed, cancelled, *coming)), "fi", 3, NOW)
+    assert [f.line for f in found] == ["AY4", "AY8", "AY5", "AY6", "AY7"], "the latest two over, and three to come"
+    assert (found[1].cancelled, found[1].arrived, found[1].realtime) == (True, False, False), "its landing time doesn't count"
+
+
+def test_a_cancelled_arrival_past_its_time_is_over_and_listed_besides_the_count() -> None:
+    cancelled = flight("AY1", "2026-03-14T09:40:00Z", OULU, status="Cancelled", code="CNL")
+    coming = [flight(f"AY{n}", f"2026-03-14T10:{m}:00Z", OULU) for n, m in ((5, 10), (6, 20), (7, 30))]
+    found = arrivals(parse_board(arrivals_xml(cancelled, *coming)), "fi", 2, NOW)
+    assert [f.line for f in found] == ["AY1", "AY5", "AY6"]
+
+
+# The count is of the flights not cancelled. Cancelled ones before the last counted are listed too, in their place by
+# time, so a run of cancellations never pushes the next flight that flies off the list. Arrivals that are over, the
+# latest two, are listed besides them as before.
+@pytest.mark.parametrize(
+    ("direction", "count", "flights", "expected"),
+    [
+        ("departures", 1, [("AY1", "10:05", True), ("AY2", "10:10", False), ("AY3", "10:20", False)], ["AY1", "AY2"]),
+        (
+            "departures",
+            2,
+            [("AY1", "10:05", False), ("AY2", "10:10", True), ("AY3", "10:20", False), ("AY4", "10:30", True)],
+            ["AY1", "AY2", "AY3"],
+        ),
+        ("departures", 2, [("AY1", "10:05", True), ("AY2", "10:10", True)], ["AY1", "AY2"]),
+        ("departures", 1, [("AY1", "10:05", False), ("AY2", "10:10", True)], ["AY1"]),
+        ("departures", 2, [("AY1", "10:05", False), ("AY2", "10:10", True), ("AY3", "10:20", True)], ["AY1", "AY2"]),
+        ("departures", 2, [(f"AY{n}", f"10:{n:02d}", True) for n in range(1, 6)], ["AY1", "AY2"]),
+        (
+            "departures",
+            3,
+            [("AY1", "10:01", True), ("AY2", "10:02", False), ("AY3", "10:03", True), ("AY4", "10:04", True), ("AY5", "10:05", True)],
+            ["AY1", "AY2", "AY3"],
+        ),
+        ("arrivals", 1, [("AY1", "10:05", True), ("AY2", "10:10", True), ("AY3", "10:20", True)], ["AY1"]),
+        (
+            "departures",
+            2,
+            [("AY1", "10:01", True), ("AY2", "10:02", True), ("AY3", "10:03", False), ("AY4", "10:04", True), ("AY5", "10:05", True)],
+            ["AY1", "AY2", "AY3"],
+        ),
+        (
+            "arrivals",
+            2,
+            [("AY1", "10:01", True), ("AY2", "10:02", True), ("AY3", "10:03", False), ("AY4", "10:04", True), ("AY5", "10:05", True)],
+            ["AY1", "AY2", "AY3"],
+        ),
+        ("arrivals", 1, [("AY9", "09:50", True), ("AY1", "10:05", True), ("AY2", "10:10", True), ("AY3", "10:20", True)], ["AY9", "AY1"]),
+        ("departures", 2, [], []),
+        ("arrivals", 2, [], []),
+        ("arrivals", 1, [("AY1", "10:05", True), ("AY2", "10:10", False), ("AY3", "10:20", False)], ["AY1", "AY2"]),
+        ("arrivals", 1, [("AY9", "09:50", True), ("AY1", "10:00", True), ("AY2", "10:10", False)], ["AY9", "AY1", "AY2"]),
+        (
+            "arrivals",
+            2,
+            [("AY1", "10:05", False), ("AY2", "10:10", True), ("AY3", "10:20", False), ("AY4", "10:30", True)],
+            ["AY1", "AY2", "AY3"],
+        ),
+    ],
+)
+def test_the_count_is_of_the_flights_not_cancelled(direction: str, count: int, flights: list, expected: list[str]) -> None:
+    built = [
+        flight(line, f"2026-03-14T{time}:00Z", OULU, **({"status": "Cancelled", "code": "CNL"} if cancelled else {}))
+        for line, time, cancelled in flights
+    ]
+    if direction == "departures":
+        found = departures(parse_board(departures_xml(*built)), "fi", count, NOW)
+    else:
+        found = arrivals(parse_board(arrivals_xml(*built)), "fi", count, NOW)
+    assert [item.line for item in found] == expected
 
 
 def test_arrivals_in_order_and_counted() -> None:

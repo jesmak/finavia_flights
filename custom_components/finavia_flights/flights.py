@@ -32,8 +32,7 @@ DEPARTURE_PAST = timedelta(minutes=1)
 # A landed flight's time is its landing time when Finavia gives one, so the minute would hide it the moment it lands.
 # Half an hour covers the bags, and the card keeps it as long.
 ARRIVAL_PAST = timedelta(minutes=30)
-# Of the landed ones, only the latest two are listed, as departures-card does: in a busy half hour, landed flights would
-# otherwise take every place in the list from those still to come.
+# Of the arrivals that are over (see is_over), only the latest two are listed besides the count, as departures-card does.
 LANDED_LISTED = 2
 
 
@@ -87,38 +86,63 @@ def parse_board(xml: bytes | str) -> ET.Element:
 
 
 def departures(board: ET.Element, language: str, count: int, now: datetime) -> list[Departure]:
-    """The next departures in order of their estimated time, without the flights that have left or are past."""
+    """The next departures in order of their estimated time, without the flights that have left or are past, the count of
+    those not cancelled (see counted)."""
     found = [
         departure
         for flight in board.iterfind(f"{NS}dep/{NS}body/{NS}flight")
         if (departure := parse_departure(flight, language)) and departure.estimated >= now - DEPARTURE_PAST
     ]
     found.sort(key=lambda departure: departure.estimated)
-    return found[:count]
+    return counted(found, count)
 
 
 def arrivals(board: ET.Element, language: str, count: int, now: datetime) -> list[Departure]:
-    """The next arrivals in order of their estimated time, each until half an hour past it, and the latest two landed."""
+    """The next `count` arrivals still to come and not cancelled (see counted), and besides them the latest two that are
+    over (see is_over) within half an hour, in order of their estimated time, so neither cancellations nor those that are
+    over push the next arrival off the list."""
     found = [
         arrival
         for flight in board.iterfind(f"{NS}arr/{NS}body/{NS}flight")
         if (arrival := parse_arrival(flight, language)) and arrival.estimated >= now - ARRIVAL_PAST
     ]
     found.sort(key=lambda arrival: arrival.estimated)
-    landed = [arrival for arrival in found if arrival.arrived and not arrival.cancelled]
-    dropped = {id(arrival) for arrival in landed[: max(len(landed) - LANDED_LISTED, 0)]}
-    return [arrival for arrival in found if id(arrival) not in dropped][:count]
+    over = [arrival for arrival in found if is_over(arrival, now)]
+    coming = [arrival for arrival in found if not is_over(arrival, now)]
+    return sorted(over[-LANDED_LISTED:] + counted(coming, count), key=lambda arrival: arrival.estimated)
+
+
+def counted(flights: list[Departure], count: int) -> list[Departure]:
+    """The first `count` flights not cancelled, in order, with the cancelled ones among them, so a run of cancellations
+    never pushes the next flight that flies off the list. When fewer than `count` aren't cancelled, as in a strike, the cancelled
+    ones after the last of them fill the list up to `count`."""
+    last, counting = -1, 0
+    for index, item in enumerate(flights):
+        if counting >= count:
+            break
+        if not item.cancelled:
+            last, counting = index, counting + 1
+    listed = flights[: last + 1]
+    if counting >= count:
+        return listed
+    return listed + flights[last + 1 :][: max(count - len(listed), 0)]
+
+
+def is_over(arrival: Departure, now: datetime) -> bool:
+    """A flight that has landed, or one cancelled and past its time: listed besides the count, the latest two."""
+    return arrival.arrived or (arrival.cancelled and arrival.estimated < now)
 
 
 def parse_departure(flight: ET.Element, language: str) -> Departure | None:
     """One departure, or None for a flight that has left, which can't be boarded, or one without a number or time.
 
-    A flight has left when its status says so or it has an actual departure time: at the smaller airports the status
-    sometimes stays empty after take-off.
+    A flight has left when its status says so or it has an actual departure time, unless it is cancelled: at the smaller
+    airports the status sometimes stays empty after take-off.
     """
     text = flight_text(flight)
     line, scheduled, status = text("fltnr"), parse_time(text("sdt")), text("prt")
-    if not line or scheduled is None or status == DEPARTED or text("act_d"):
+    # A cancelled flight hasn't left or landed, whatever else Finavia's data says.
+    if not line or scheduled is None or (status != CANCELLED and (status == DEPARTED or text("act_d"))):
         return None
     estimate = parse_time(text("pest_d"))
     return Departure(
@@ -137,7 +161,8 @@ def parse_departure(flight: ET.Element, language: str) -> Departure | None:
 def parse_arrival(flight: ET.Element, language: str) -> Departure | None:
     """One arrival, or None for one without a number or time.
 
-    A flight has landed when its status says so or it has a landing time, as a departure has left. A landing time is its
+    A flight has landed when its status says so or it has a landing time, unless it is cancelled, as a departure has
+    left. A landing time is its
     estimated time, as Finavia's own estimate stays as it was and can be minutes off. The route usually lists where
     it comes from, but a flight through the airport can list its whole
     way, the airport itself included (FRA, KTT, EVE landing at Kittilä), so only the legs before the airport count.
@@ -146,7 +171,9 @@ def parse_arrival(flight: ET.Element, language: str) -> Departure | None:
     line, scheduled, status = text("fltnr"), parse_time(text("sdt")), text("prt")
     if not line or scheduled is None:
         return None
-    estimate = parse_time(text("act_d")) or parse_time(text("pest_d"))
+    # A cancelled flight hasn't landed, whatever else Finavia's data says, so its landing time doesn't count.
+    landing = parse_time(text("act_d")) if status != CANCELLED else None
+    estimate = landing or parse_time(text("pest_d"))
     codes = [text(f"route_{leg}") for leg in LEGS]
     here = text("h_apt")
     legs = range(1, codes.index(here) + 1) if here and here in codes else LEGS
@@ -161,7 +188,7 @@ def parse_arrival(flight: ET.Element, language: str) -> Departure | None:
         platform=text("bltarea") or None,
         cancelled=status == CANCELLED,
         notice=notice(text, status, language),
-        arrived=status == LANDED or bool(text("act_d")),
+        arrived=(status == LANDED or landing is not None) and status != CANCELLED,
     )
 
 

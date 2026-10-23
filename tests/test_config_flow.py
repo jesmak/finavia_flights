@@ -205,7 +205,10 @@ async def test_changing_the_number_of_departures(hass: HomeAssistant, finavia: A
     assert result["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
     assert entry.subentries[subentry.subentry_id].data == {"airport": "HEL", "departures": 2}
-    assert len(hass.states.get("sensor.hel").attributes["departures"]) == 2, "of the three the fixture has to list"
+    listed = hass.states.get("sensor.hel").attributes["departures"]
+    assert [departure.get("cancelled", False) for departure in listed] == [True, False, False], (
+        "two that fly, and the cancelled one before them"
+    )
 
 
 async def test_a_new_key_by_reconfiguring(hass: HomeAssistant, finavia: AiohttpClientMocker) -> None:

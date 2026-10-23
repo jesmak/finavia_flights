@@ -54,7 +54,7 @@
           },
           "data_description": {
             "direction": "Molemmat luo kaksi anturia, toisen lähtevistä ja toisen saapuvista lennoista.",
-            "departures": "Kuinka monta seuraavaa lentoa kukin anturi listaa."
+            "departures": "Kuinka monta seuraavaa lentoa kukin anturi listaa. Perutut vuorot niiden välissä näkyvät lisäksi, ja saapuvissa näytetään enintään kaksi viimeisintä laskeutunutta tai peruttua."
           }
         },
         "reconfigure": {
@@ -64,7 +64,7 @@
             "departures": "Lentojen määrä"
           },
           "data_description": {
-            "departures": "Kuinka monta seuraavaa lentoa kukin anturi listaa."
+            "departures": "Kuinka monta seuraavaa lentoa kukin anturi listaa. Perutut vuorot niiden välissä näkyvät lisäksi, ja saapuvissa näytetään enintään kaksi viimeisintä laskeutunutta tai peruttua."
           }
         }
       },

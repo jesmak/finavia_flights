@@ -54,7 +54,7 @@
           },
           "data_description": {
             "direction": "Both creates two sensors, one for departures and one for arrivals.",
-            "departures": "How many of the next flights each sensor lists."
+            "departures": "How many of the next flights each sensor lists. Cancelled flights among them are listed too, and arrivals also show at most the latest two that have landed or were cancelled."
           }
         },
         "reconfigure": {
@@ -64,7 +64,7 @@
             "departures": "Number of flights"
           },
           "data_description": {
-            "departures": "How many of the next flights each sensor lists."
+            "departures": "How many of the next flights each sensor lists. Cancelled flights among them are listed too, and arrivals also show at most the latest two that have landed or were cancelled."
           }
         }
       },

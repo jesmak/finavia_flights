@@ -65,11 +65,11 @@ one with "arrivals" after the name, in Finnish when Home Assistant is in Finnish
 `sensor.helsinki` and `sensor.helsinki_arrivals` in English, `sensor.helsinki_vantaa` and
 `sensor.helsinki_vantaa_saapuvat` in Finnish. Each of an airport's directions can be added once.
 
-| Name              | Type   | Description                                                                   | Default |
-| ----------------- | ------ | ----------------------------------------------------------------------------- | ------- |
-| Airport           | choice | One of Finavia's 19 airports                                                  | none    |
-| Flights           | choice | Departures, arrivals or both, which makes the two sensors from one request    | both    |
-| Number of flights | number | How many flights each sensor lists, 1–30, two landed ones at most among them  | 10      |
+| Name              | Type   | Description                                                                                | Default |
+| ----------------- | ------ | ------------------------------------------------------------------------------------------ | ------- |
+| Airport           | choice | One of Finavia's 19 airports                                                               | none    |
+| Flights           | choice | Departures, arrivals or both, which makes the two sensors from one request                 | both    |
+| Number of flights | number | How many flights not cancelled each sensor lists, 1–30, with the cancelled ones among them | 10      |
 
 Changing an airport changes only the number of flights. To follow another airport or direction, remove the old one
 first, then add it.
@@ -116,8 +116,11 @@ Keys with no value are left out.
 Departures that have left are not listed. A departure more than a minute past its time is left out, as departures-card
 would hide it anyway, cancelled ones included, as Finavia keeps them in its data for a day and a half. An arrival stays
 until half an hour past its time, for a landed flight its landing time when Finavia gives one, long enough to meet
-someone at the hall. Only the latest two landed flights are listed, so a busy half hour doesn't push what's coming off
-the list. Only the next flight's time is stored in the recorder, not the list.
+someone at the hall. A cancelled flight is listed as cancelled for as long, even when Finavia gives it a departure or
+landing time. The number of flights counts those not cancelled, still to come for arrivals, and the cancelled ones among
+them are listed too, so a run of cancellations doesn't push the next flight off the list. The latest two arrivals that
+are over, landed or cancelled and past their time, are listed besides them. Only the next flight's time is stored in the
+recorder, not the list.
 
 Flights are fetched every 10 minutes, both directions of an airport in one request. Finavia's data covers the whole
 day and a half every time, about 400 KB for Helsinki-Vantaa's departures and as much again for its arrivals, so
@@ -179,8 +182,8 @@ key fetches the departures of Enontekiö, one of the smallest airports.
 Finavia's status codes differ between airports, so statuses are read by their English text instead. Helsinki-Vantaa
 calls a departed flight `DEP` and a cancelled one `CNL`, where the others say `D` and `C`, and an estimate is `DLU`
 leaving and `EST` landing. A flight counts as departed or landed when its status says so or it has an actual time,
-since a small airport's status can stay empty. An arrival's route can list its whole way, the airport itself included,
-and then only the places before the airport are its origin.
+unless it is cancelled, since a small airport's status can stay empty. An arrival's route can list its whole way, the
+airport itself included, and then only the places before the airport are its origin.
 
 ## Translating
 
