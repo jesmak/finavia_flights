@@ -168,9 +168,8 @@ The flight data comes from [Finavia](https://www.finavia.fi/)'s Public Flights A
 terms or licence for it, and the sensors credit it as "Finavia".
 
 This is an unofficial integration. It isn't made, endorsed or supported by Finavia, and has no connection to it. Each
-user signs up for an API key of their own and uses it under whatever terms Finavia sets, at their own risk. If Finavia
-objects to the integration, it will be withdrawn. The icon is Finavia's logo, a trademark of Finavia, and is used only
-to show where the data comes from.
+user signs up for an API key of their own on Finavia's API portal. The icon is Finavia's logo, a trademark of Finavia,
+and is used only to show where the data comes from.
 
 ### How it is fetched
 
