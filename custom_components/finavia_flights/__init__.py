@@ -19,6 +19,8 @@ PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FinaviaConfigEntry) -> bool:
+    # A change saved before the update listener is added below has nothing to reload the entry, so it is looked for then.
+    modified = entry.modified_at
     entry.runtime_data = FinaviaRuntimeData(client=FinaviaClient(async_get_clientsession(hass), entry.data[CONF_API_KEY]))
     coordinators = [AirportCoordinator(hass, entry, subentry) for subentry in entry.subentries.values()]
     for coordinator in coordinators:
@@ -30,6 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FinaviaConfigEntry) -> b
 
     # Adding, changing or removing an airport, or changing the key, reloads everything.
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+    if entry.modified_at != modified:
+        hass.config_entries.async_schedule_reload(entry.entry_id)
     return True
 
 

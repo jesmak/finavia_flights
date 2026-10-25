@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from types import MappingProxyType
+
 import pytest
 from freezegun.api import FrozenDateTimeFactory
-from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry, ConfigSubentryData
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -160,3 +162,41 @@ async def test_a_subentry_from_before_keeps_its_sensor(hass: HomeAssistant, fina
     assert registry.async_get_entity_id("sensor", DOMAIN, subentry_id) == "sensor.helsinki_vantaa"
     assert hass.states.get("sensor.helsinki_vantaa").attributes["direction"] == "departures"
     assert [str(call[1]) for call in finavia.mock_calls] == [API_URL.format(kind="dep", airport="HEL")]
+
+
+@pytest.mark.parametrize("change", ["data", "subentry"])
+async def test_a_change_saved_while_setting_up_is_applied(
+    hass: HomeAssistant, finavia: AiohttpClientMocker, monkeypatch: pytest.MonkeyPatch, change: str
+) -> None:
+    entry = MockConfigEntry(domain=DOMAIN, title="Finavia", data={"api_key": "test-key"})
+    entry.add_to_hass(hass)
+    oulu = ConfigSubentry(
+        data=MappingProxyType({"airport": "OUL", "departures": 10}), subentry_type="airport", title="Oulu", unique_id=None
+    )
+    forward = hass.config_entries.async_forward_entry_setups
+    setups = []
+
+    async def save_while_setting_up(entry: MockConfigEntry, platforms) -> None:
+        setups.append((dict(entry.data), set(entry.subentries)))
+        # Saved as a flow would save it, before setup has added its update listener.
+        if len(setups) == 1:
+            if change == "data":
+                hass.config_entries.async_update_entry(entry, data={"api_key": "new-key"})
+            else:
+                hass.config_entries.async_add_subentry(entry, oulu)
+        await forward(entry, platforms)
+
+    monkeypatch.setattr(hass.config_entries, "async_forward_entry_setups", save_while_setting_up)
+    # Not asserted: the reload may already be under way when the setup returns.
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(setups) == 2, "set up again with the change"
+    assert setups[0] != setups[1], "the first setup saw the entry before the change"
+    data, subentries = setups[-1]
+    if change == "data":
+        assert data == {"api_key": "new-key"}
+    else:
+        assert subentries == {oulu.subentry_id}
+        assert oulu.subentry_id in entry.runtime_data.coordinators
