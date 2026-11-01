@@ -26,6 +26,8 @@ NO_NOTICE = frozenset({CANCELLED, LANDED, "Estimated"})
 LEGS = range(1, 5)
 # The status text's field by language; English is prt.
 STATUS_FIELDS = {"fi": "prt_f", "sv": "prt_s"}
+# Finavia's own texts made shorter, by language and the English status, so they fit beside a departure on the card.
+SHORTER_STATUSES = {"fi": {"Final call": "Viim. kutsu"}}
 # departures-card hides a departure more than a minute past its estimated time. Finavia keeps cancelled flights, and
 # the odd one that never left, for its whole day and a half, so they would take the list's first places for hours.
 DEPARTURE_PAST = timedelta(minutes=1)
@@ -200,10 +202,13 @@ def flight_text(flight: ET.Element) -> Callable[[str], str]:
 
 
 def notice(text: Callable[[str], str], status: str, language: str) -> str | None:
-    """The status in the language, or in English when Finavia has no text in it, as it sometimes has no Finnish place name."""
+    """
+    The status in the language, or in English when Finavia has no text in it, as it sometimes has no Finnish place name.
+    A status with a shorter text of the integration's own gets that instead.
+    """
     if status in NO_NOTICE:
         return None
-    return text(STATUS_FIELDS.get(language, "prt")) or status or None
+    return SHORTER_STATUSES.get(language, {}).get(status) or text(STATUS_FIELDS.get(language, "prt")) or status or None
 
 
 def leg_names(text: Callable[[str], str], language: str, legs: range = LEGS) -> list[str]:

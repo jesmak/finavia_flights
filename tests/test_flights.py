@@ -157,6 +157,13 @@ def test_names_and_statuses_follow_the_language(language: str, headsign: str, no
     assert (departure["headsign"], departure["notice"]) == (headsign, notice)
 
 
+@pytest.mark.parametrize(("language", "notice"), [("fi", "Viim. kutsu"), ("en", "Final call")])
+def test_a_final_call_is_shortened_in_finnish(language: str, notice: str) -> None:
+    final_call = {"prt": "Final call", "prt_f": "Viimeinen kutsu", "prm": "FIN"}
+    [departure] = one({**flight("AY1", LATER, OULU), **final_call}, language)
+    assert departure["notice"] == notice
+
+
 def test_no_swedish_status_falls_back_to_english() -> None:
     [departure] = one({**flight("AY1", LATER, OULU, status="Go to gate", code="GTO"), "prt_s": ""}, "sv")
     assert departure["notice"] == "Go to gate"
