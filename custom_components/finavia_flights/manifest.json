@@ -1,6 +1,7 @@
 {
   "domain": "finavia_flights",
   "name": "Finavia Flights",
+  "categories": ["vehicles_transport.flights"],
   "codeowners": ["@jesmak"],
   "config_flow": true,
   "dependencies": [],
