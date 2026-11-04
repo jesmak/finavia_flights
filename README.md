@@ -2,7 +2,7 @@
 
 Home Assistant integration that turns the departures and arrivals at Finavia's airports into departure board sensors.
 
-[![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![HACS][hacs-shield]][hacs] [![License][license-shield]](LICENSE)
+[![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![Marketplace][marketplace-shield]][marketplace] [![License][license-shield]](LICENSE)
 
 <img src="https://raw.githubusercontent.com/jesmak/finavia_flights/main/docs/images/dashboard-light.png#gh-light-mode-only" width="1032" alt="An airport's departures and arrivals side by side on two departure boards, the next flight of each large with its countdown, a cancelled departure, two landed arrivals dimmed with their baggage halls, and one approaching">
 <img src="https://raw.githubusercontent.com/jesmak/finavia_flights/main/docs/images/dashboard-dark.png#gh-dark-mode-only" width="1032" alt="An airport's departures and arrivals side by side on two departure boards, the next flight of each large with its countdown, a cancelled departure, two landed arrivals dimmed with their baggage halls, and one approaching">
@@ -26,10 +26,10 @@ The data comes from Finavia's Public Flights API, which needs a free API key of 
 
 ## Installation
 
-### With HACS
+### With the Marketplace
 
-1. Add this repository to HACS custom repositories with type **Integration**
-2. Search for Finavia Flights in HACS and download it
+1. Open Settings › Marketplace, choose Add from link and paste `https://github.com/jesmak/finavia_flights`
+2. Open Finavia Flights in the Marketplace and choose Install
 3. Restart Home Assistant
 4. Get an API key (below), add the integration in Settings › Devices & services, then add airports from its page
 
@@ -225,6 +225,6 @@ MIT, see [LICENSE](LICENSE). The Finavia logo in `brand/` is Finavia's trademark
 [releases-shield]: https://img.shields.io/github/release/jesmak/finavia_flights.svg?style=for-the-badge
 [release-date-shield]: https://img.shields.io/github/release-date/jesmak/finavia_flights?style=for-the-badge
 [releases]: https://github.com/jesmak/finavia_flights/releases
-[hacs-shield]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
-[hacs]: https://hacs.xyz/docs/faq/custom_repositories/
+[marketplace-shield]: https://img.shields.io/badge/Marketplace-Custom-orange.svg?style=for-the-badge
+[marketplace]: https://my.home-assistant.io/redirect/marketplace_repository/?owner=jesmak&repository=finavia_flights&category=integration
 [license-shield]: https://img.shields.io/github/license/jesmak/finavia_flights.svg?style=for-the-badge
