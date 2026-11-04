@@ -51,9 +51,9 @@ The data comes from Finavia's Public Flights API, which needs a free API key of 
 
 ### Integration
 
-| Name    | Type     | Description                                                   | Default |
-| ------- | -------- | ------------------------------------------------------------- | ------- |
-| API key | password | Your key for Finavia's Public Flights API, checked when saved | none    |
+| Name    | Type     | Description                                                   | Default  |
+| ------- | -------- | ------------------------------------------------------------- | -------- |
+| API key | password | Your key for Finavia's Public Flights API, checked when saved | required |
 
 The key is asked for once. To change it, choose **Reconfigure** on the integration page. If Finavia stops accepting
 it, Home Assistant asks for a new one there.
@@ -65,11 +65,11 @@ one with "arrivals" after the name, in Finnish when Home Assistant is in Finnish
 `sensor.helsinki` and `sensor.helsinki_arrivals` in English, `sensor.helsinki_vantaa` and
 `sensor.helsinki_vantaa_saapuvat` in Finnish. Each of an airport's directions can be added once.
 
-| Name              | Type   | Description                                                                                | Default |
-| ----------------- | ------ | ------------------------------------------------------------------------------------------ | ------- |
-| Airport           | choice | One of Finavia's 19 airports                                                               | none    |
-| Flights           | choice | Departures, arrivals or both, which makes the two sensors from one request                 | both    |
-| Number of flights | number | How many flights not cancelled each sensor lists, 1–30, with the cancelled ones among them | 10      |
+| Name              | Type   | Description                                                                                | Default  |
+| ----------------- | ------ | ------------------------------------------------------------------------------------------ | -------- |
+| Airport           | choice | One of Finavia's 19 airports                                                               | required |
+| Flights           | choice | Departures, arrivals or both, which makes the two sensors from one request                 | both     |
+| Number of flights | number | How many flights not cancelled each sensor lists, 1–30, with the cancelled ones among them | 10       |
 
 Changing an airport changes only the number of flights. To follow another airport or direction, remove the old one
 first, then add it.

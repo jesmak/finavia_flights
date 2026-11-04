@@ -131,11 +131,6 @@ HELSINKI_ARRIVALS = (
 HELSINKI_ALL_XML = board_xml(HELSINKI_DEPARTURES, HELSINKI_ARRIVALS)
 
 
-@pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
-    """Lets Home Assistant load integrations from custom_components/."""
-
-
 @pytest.fixture
 def finavia(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
     """Finavia's API with Helsinki-Vantaa's departures, arrivals and both, and the small airport a key is checked with."""

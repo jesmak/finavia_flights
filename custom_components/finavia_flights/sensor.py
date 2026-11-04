@@ -44,7 +44,7 @@ class DeparturesSensor(CoordinatorEntity[AirportCoordinator], SensorEntity):
             self._attr_translation_key = "arrivals"
             self._attr_icon = "mdi:airplane-landing"
         else:
-            # The departures' unique id is the subentry's, as it was before arrivals.
+            # The departures' unique id is the subentry's own, the arrivals' has a suffix.
             self._attr_unique_id = subentry.subentry_id
             self._attr_name = None
             self._attr_icon = "mdi:airplane-takeoff"

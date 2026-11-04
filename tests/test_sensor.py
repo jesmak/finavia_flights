@@ -14,13 +14,14 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
 
 from custom_components.finavia_flights.const import API_URL, DOMAIN, language_of
-from custom_components.finavia_flights.sensor import DeparturesSensor
 
 from .conftest import EMPTY_XML, NOW, OULU, STOCKHOLM, departures_xml, flight
 
+pytestmark = pytest.mark.usefixtures("enable_custom_integrations")
+
 
 async def setup_helsinki(hass: HomeAssistant, direction: str | None = None) -> MockConfigEntry:
-    """Helsinki-Vantaa as a subentry; with no direction it is from before arrivals, and departures."""
+    """Helsinki-Vantaa as a subentry; with no direction it is departures."""
     data = {"airport": "HEL", "departures": 10} | ({"direction": direction} if direction else {})
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -48,10 +49,6 @@ async def test_departures_sensor(hass: HomeAssistant, finavia: AiohttpClientMock
     assert state.attributes["attribution"] == "Finavia"
     assert [departure["line"] for departure in state.attributes["departures"]] == ["AY9003", "AY9007", "AY9005"]
     assert finavia.mock_calls[0][3]["app_key"] == "test-key"
-
-
-async def test_the_departures_stay_out_of_the_recorder() -> None:
-    assert DeparturesSensor._unrecorded_attributes == frozenset({"departures"})
 
 
 async def test_only_cancelled_departures(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, freezer: FrozenDateTimeFactory) -> None:

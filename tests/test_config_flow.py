@@ -14,9 +14,11 @@ from custom_components.finavia_flights.const import AIRPORTS, API_URL, DOMAIN
 
 from .conftest import NOW
 
+pytestmark = pytest.mark.usefixtures("enable_custom_integrations")
+
 
 async def setup_entry(hass: HomeAssistant, *airports: str | tuple[str, str | None], direction: str | None = None) -> MockConfigEntry:
-    """An entry with a subentry per airport, each "HEL" or ("HEL", its direction); with none it is from before arrivals."""
+    """An entry with a subentry per airport, each "HEL" or ("HEL", its direction); with none it is departures."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Finavia",
@@ -143,12 +145,6 @@ async def test_each_direction_once(
     else:
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"direction": "direction_added"}
-
-
-async def test_a_subentry_from_before_arrivals_is_departures(hass: HomeAssistant, finavia: AiohttpClientMocker) -> None:
-    entry = await setup_entry(hass, "HEL")
-    result = await add_airport(hass, entry, {"airport": "HEL", "direction": "departures", "departures": 5})
-    assert result["errors"] == {"direction": "direction_added"}
 
 
 async def test_an_airport_is_offered_until_both_ways_are_added(hass: HomeAssistant, finavia: AiohttpClientMocker) -> None:

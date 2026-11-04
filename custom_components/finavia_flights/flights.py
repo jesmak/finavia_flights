@@ -164,10 +164,9 @@ def parse_arrival(flight: ET.Element, language: str) -> Departure | None:
     """One arrival, or None for one without a number or time.
 
     A flight has landed when its status says so or it has a landing time, unless it is cancelled, as a departure has
-    left. A landing time is its
-    estimated time, as Finavia's own estimate stays as it was and can be minutes off. The route usually lists where
-    it comes from, but a flight through the airport can list its whole
-    way, the airport itself included (FRA, KTT, EVE landing at Kittilä), so only the legs before the airport count.
+    left. A landing time is its estimated time, as Finavia's own estimate stays as it was and can be minutes off. The
+    route usually lists where it comes from, but a flight through the airport can list its whole way, the airport
+    itself included (FRA, KTT, EVE landing at Kittilä), so only the legs before the airport count.
     """
     text = flight_text(flight)
     line, scheduled, status = text("fltnr"), parse_time(text("sdt")), text("prt")

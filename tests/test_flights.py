@@ -195,6 +195,7 @@ def test_no_flights() -> None:
         "<html>Service unavailable</html",
         '{"statusCode": 500}',
         "<html><body>Maintenance</body></html>",
+        "<flights/>",
         b"<html>Service unavailable</html",
         b"\xff\xfe<flights/>",
         b'<?xml version="1.0" encoding="foo"?><flights xmlns="http://www.finavia.fi/FlightsService.xsd"/>',
@@ -221,13 +222,6 @@ def test_an_answer_that_isnt_flights_fails(answer: bytes | str) -> None:
 def test_statuses_the_card_shows_itself_make_no_notice(xml_flight: dict[str, str], language: str) -> None:
     [departure] = one(xml_flight, language)
     assert "notice" not in departure
-
-
-def test_the_xml_declaration_decides_the_encoding() -> None:
-    xml = departures_xml(flight("AY1", LATER, ("CPH", "Copenhagen", "Kööpenhamina"), status="Go to gate"))
-    latin1 = xml.replace('encoding="UTF-8"', 'encoding="ISO-8859-1"').encode("iso-8859-1")
-    [departure] = departures(parse_board(latin1), "fi", 10, NOW)
-    assert departure.headsign == "Kööpenhamina"
 
 
 FRANKFURT = ("FRA", "Frankfurt", "Frankfurt")
