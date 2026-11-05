@@ -68,10 +68,12 @@ async def test_a_failed_fetch_makes_it_unavailable(hass: HomeAssistant, aioclien
     assert hass.states.get("sensor.helsinki_vantaa").state == STATE_UNAVAILABLE
 
 
-async def test_an_answer_that_isnt_xml_makes_it_unavailable(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+async def test_an_answer_that_isnt_xml_makes_it_unavailable(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog) -> None:
     aioclient_mock.get(API_URL.format(kind="dep", airport="HEL"), text="<html>Maintenance")
     await setup_helsinki(hass)
     assert hass.states.get("sensor.helsinki_vantaa").state == STATE_UNAVAILABLE
+    assert "Finavia's answer isn't XML" in caplog.text
+    assert "Unexpected error" not in caplog.text, "an answer that isn't Finavia's is an ordinary failure"
 
 
 async def test_a_timeout_is_named_in_the_log(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog) -> None:

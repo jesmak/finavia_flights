@@ -60,11 +60,15 @@ class AirportCoordinator(DataUpdateCoordinator[dict[str, list[Departure]]]):
     async def _async_update_data(self) -> dict[str, list[Departure]]:
         try:
             xml = await self.config_entry.runtime_data.client.flights_xml(API_KINDS[self.direction], self.airport)
-            board = parse_board(xml)
+            # A big airport's board takes tens of milliseconds to parse and sort, too long for the event loop.
+            return await self.hass.async_add_executor_job(self._flights, xml, self.language)
         except FinaviaAuthError as err:
             raise ConfigEntryAuthFailed(str(err)) from err
         except FinaviaError as err:
             raise UpdateFailed(str(err)) from err
+
+    def _flights(self, xml: bytes, language: str) -> dict[str, list[Departure]]:
+        board = parse_board(xml)
         now = dt_util.utcnow()
         lists = {DIRECTION_DEPARTURES: departures, DIRECTION_ARRIVALS: arrivals}
-        return {direction: lists[direction](board, self.language, self.count, now) for direction in self.directions}
+        return {direction: lists[direction](board, language, self.count, now) for direction in self.directions}
