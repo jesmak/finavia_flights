@@ -28,8 +28,8 @@ The data comes from Finavia's Public Flights API, which needs a free API key of 
 
 ### With the Marketplace
 
-1. Open Settings › Marketplace, choose Add from link and paste `https://github.com/jesmak/finavia_flights`
-2. Open Finavia Flights in the Marketplace and choose Install
+1. Open Settings › Marketplace and search for Finavia Flights
+2. Open it and choose Install
 3. Restart Home Assistant
 4. Get an API key (below), add the integration in Settings › Devices & services, then add airports from its page
 
@@ -225,6 +225,6 @@ MIT, see [LICENSE](LICENSE). The Finavia logo in `brand/` is Finavia's trademark
 [releases-shield]: https://img.shields.io/github/release/jesmak/finavia_flights.svg?style=for-the-badge
 [release-date-shield]: https://img.shields.io/github/release-date/jesmak/finavia_flights?style=for-the-badge
 [releases]: https://github.com/jesmak/finavia_flights/releases
-[marketplace-shield]: https://img.shields.io/badge/Marketplace-Custom-orange.svg?style=for-the-badge
+[marketplace-shield]: https://img.shields.io/badge/Marketplace-Default-green.svg?style=for-the-badge
 [marketplace]: https://my.home-assistant.io/redirect/marketplace_repository/?owner=jesmak&repository=finavia_flights&category=integration
 [license-shield]: https://img.shields.io/github/license/jesmak/finavia_flights.svg?style=for-the-badge
