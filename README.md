@@ -2,7 +2,7 @@
 
 Home Assistant integration that turns the departures and arrivals at Finavia's airports into departure board sensors.
 
-[![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![Marketplace][marketplace-shield]][marketplace] [![License][license-shield]](LICENSE)
+[![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![Downloads][downloads-shield]][releases] [![Marketplace][marketplace-shield]][marketplace] [![License][license-shield]](LICENSE)
 
 <img src="https://raw.githubusercontent.com/jesmak/finavia_flights/main/docs/images/dashboard-light.png#gh-light-mode-only" width="1032" alt="An airport's departures and arrivals side by side on two departure boards, the next flight of each large with its countdown, a cancelled departure, two landed arrivals dimmed with their baggage halls, and one approaching">
 <img src="https://raw.githubusercontent.com/jesmak/finavia_flights/main/docs/images/dashboard-dark.png#gh-dark-mode-only" width="1032" alt="An airport's departures and arrivals side by side on two departure boards, the next flight of each large with its countdown, a cancelled departure, two landed arrivals dimmed with their baggage halls, and one approaching">
@@ -225,6 +225,7 @@ MIT, see [LICENSE](LICENSE). The Finavia logo in `brand/` is Finavia's trademark
 [releases-shield]: https://img.shields.io/github/release/jesmak/finavia_flights.svg?style=for-the-badge
 [release-date-shield]: https://img.shields.io/github/release-date/jesmak/finavia_flights?style=for-the-badge
 [releases]: https://github.com/jesmak/finavia_flights/releases
+[downloads-shield]: https://img.shields.io/github/downloads/jesmak/finavia_flights/total.svg?style=for-the-badge
 [marketplace-shield]: https://img.shields.io/badge/Marketplace-Default-green.svg?style=for-the-badge
 [marketplace]: https://my.home-assistant.io/redirect/marketplace_repository/?owner=jesmak&repository=finavia_flights&category=integration
 [license-shield]: https://img.shields.io/github/license/jesmak/finavia_flights.svg?style=for-the-badge
