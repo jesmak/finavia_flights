@@ -138,6 +138,7 @@ async def test_each_direction_once(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {"airport": "HEL", "direction": asked, "departures": 5}
     )
+    await hass.async_block_till_done()
     if created:
         assert result["type"] is FlowResultType.CREATE_ENTRY
     else:
