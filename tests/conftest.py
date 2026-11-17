@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from xml.sax.saxutils import escape
 
 import pytest
-from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from custom_components.finavia_flights.const import API_URL
 

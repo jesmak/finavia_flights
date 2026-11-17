@@ -10,14 +10,12 @@ from homeassistant.config_entries import ConfigEntryState, ConfigSubentry, Confi
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from custom_components.finavia_flights.const import API_URL, DOMAIN, language_of
 
 from .conftest import EMPTY_XML, NOW, OULU, STOCKHOLM, departures_xml, flight
-
-pytestmark = pytest.mark.usefixtures("enable_custom_integrations")
 
 
 async def setup_helsinki(hass: HomeAssistant, direction: str | None = None) -> MockConfigEntry:

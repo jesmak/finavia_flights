@@ -7,14 +7,12 @@ from freezegun.api import FrozenDateTimeFactory
 from homeassistant.config_entries import SOURCE_USER, ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from custom_components.finavia_flights.const import AIRPORTS, API_URL, DOMAIN
 
 from .conftest import NOW
-
-pytestmark = pytest.mark.usefixtures("enable_custom_integrations")
 
 
 async def setup_entry(hass: HomeAssistant, *airports: str | tuple[str, str | None], direction: str | None = None) -> MockConfigEntry:
