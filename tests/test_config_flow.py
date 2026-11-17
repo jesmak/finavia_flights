@@ -223,6 +223,7 @@ async def test_a_refused_key_asks_for_a_new_one(hass: HomeAssistant, aioclient_m
 
     aioclient_mock.get(API_URL.format(kind="dep", airport="ENF"), text="<flights xmlns='http://www.finavia.fi/FlightsService.xsd'/>")
     result = await hass.config_entries.flow.async_configure(flow["flow_id"], {"api_key": "new-key"})
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data == {"api_key": "new-key"}
