@@ -4,8 +4,8 @@ Home Assistant integration that turns the departures and arrivals at Finavia's a
 
 [![GitHub Release][releases-shield]][releases] [![GitHub Release Date][release-date-shield]][releases] [![Downloads][downloads-shield]][releases] [![Marketplace][marketplace-shield]][marketplace] [![License][license-shield]](LICENSE)
 
-<img src="https://raw.githubusercontent.com/jesmak/finavia_flights/main/docs/images/dashboard-light.png#gh-light-mode-only" width="1032" alt="An airport's departures and arrivals side by side on two departure boards, the next flight of each large with its countdown, a cancelled departure, two landed arrivals dimmed with their baggage halls, and one approaching">
-<img src="https://raw.githubusercontent.com/jesmak/finavia_flights/main/docs/images/dashboard-dark.png#gh-dark-mode-only" width="1032" alt="An airport's departures and arrivals side by side on two departure boards, the next flight of each large with its countdown, a cancelled departure, two landed arrivals dimmed with their baggage halls, and one approaching">
+<img src="https://raw.githubusercontent.com/jesmak/finavia_flights/main/docs/images/dashboard-light.png#gh-light-mode-only" width="1032" alt="An airport's departures and arrivals side by side on two departure boards, the next flight of each large with its countdown, a cancelled departure, two landed arrivals dimmed, and each flight's delay and gate at the end of its line">
+<img src="https://raw.githubusercontent.com/jesmak/finavia_flights/main/docs/images/dashboard-dark.png#gh-dark-mode-only" width="1032" alt="An airport's departures and arrivals side by side on two departure boards, the next flight of each large with its countdown, a cancelled departure, two landed arrivals dimmed, and each flight's delay and gate at the end of its line">
 
 ## What is it?
 
